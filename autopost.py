@@ -1,44 +1,43 @@
-from datetime import datetime
-import random
+import sqlite3
+from real_jobs import fetch_jobs
 
-# Job categories
-jobs = [
-    "SSC GD Bharti 2025",
-    "Railway Group D Vacancy 2025",
-    "Police Constable Recruitment 2025",
-    "Post Office Recruitment 2025",
-    "Army Rally Bharti 2025",
-    "Teacher Vacancy 2025",
-    "Anganwadi Bharti 2025",
-    "10th Pass Govt Job 2025",
-    "12th Pass Govt Job 2025"
-]
+DB = "site.db"
 
-# Extra lines to make content look different
-lines = [
-    "Online application form shuru ho chuka hai.",
-    "Interested candidates official website par apply kar sakte hain.",
-    "Last date jald hi announce ki jayegi.",
-    "Selection process me exam aur document verification hoga.",
-    "Form bharne se pehle official notification jarur padhe."
-]
+def save_post(title, link, date):
+conn = sqlite3.connect(DB)
+cur = conn.cursor()
 
-def generate_post():
-    job = random.choice(jobs)
-    title = job + " Apply Online"
+```
+cur.execute("""
+CREATE TABLE IF NOT EXISTS posts(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT UNIQUE,
+    link TEXT,
+    date TEXT
+)
+""")
 
-    # 2–3 random lines se content banega
-    content = f"{job} ke liye notification release ho gaya hai. " + " ".join(random.sample(lines, 3))
-    date = datetime.now().strftime("%d %b %Y")
+try:
+    cur.execute(
+        "INSERT INTO posts(title, link, date) VALUES(?,?,?)",
+        (title, link, date)
+    )
+    print("POST ADDED:", title)
 
-    return title, content, date
+except:
+    print("DUPLICATE SKIPPED:", title)
 
-print("\n====== AUTO POSTS READY ======\n")
+conn.commit()
+conn.close()
+```
 
-# Roz ke liye 5 posts generate
-for i in range(5):
-    t, c, d = generate_post()
-    print("TITLE:", t)
-    print("CONTENT:", c)
-    print("DATE:", d)
-    print("------------------------------")
+def run():
+jobs = fetch_jobs()
+
+```
+for job in jobs:
+    save_post(job["title"], job["link"], job["date"])
+```
+
+if **name** == "**main**":
+run()

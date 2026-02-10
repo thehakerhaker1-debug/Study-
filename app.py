@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect, render_template_string, session
 from datetime import datetime
+import sqlite3
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -10,10 +11,31 @@ updates = []
 visitor_count = 0
 
 # 🌐 HOME PAGE
+
 @app.route("/")
 def home():
-    global visitor_count
-    visitor_count += 1
+global visitor_count
+visitor_count += 1
+
+```
+# DATABASE SE POSTS LOAD
+conn = sqlite3.connect("site.db")
+cur = conn.cursor()
+
+cur.execute("CREATE TABLE IF NOT EXISTS posts(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, link TEXT, date TEXT)")
+cur.execute("SELECT title, link, date FROM posts ORDER BY id DESC LIMIT 50")
+
+rows = cur.fetchall()
+conn.close()
+
+updates = []
+for r in rows:
+    updates.append({
+        "title": r[0],
+        "content": f"<a href='{r[1]}' target='_blank'>Apply Link</a>",
+        "date": r[2]
+    })
+```
 
     return render_template_string("""
 <!DOCTYPE html>
@@ -244,8 +266,8 @@ def auto_worker():
     while True:
         print("Auto content start...")
         os.system("python bulk_titles.py")
-        os.system("python autopost.py")
-        os.system("python autopost.py")
+        os.system("python autopost_real.py")
+        os.system("python delete_old.py")
         print("Next run after 6 hours...")
         time.sleep(21600)
 
