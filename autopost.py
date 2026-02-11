@@ -5,46 +5,55 @@ from datetime import datetime
 
 DB = "site.db"
 
-URL = "https://www.freejobalert.com/latest-notifications/"
+URLS = [
+    "https://upsc.gov.in/recruitment",
+    "https://ssc.nic.in/",
+    "https://indianrailways.gov.in/",
+    "https://www.joinindianarmy.nic.in/",
+    "https://www.freejobalert.com/latest-notifications/"
+]
+
 
 def fetch_real_jobs():
     jobs = []
 
-    try:
-        r = requests.get(URL, timeout=15)
-        soup = BeautifulSoup(r.text, "html.parser")
+    for URL in URLS:
+        try:
+            print("Checking:", URL)
 
-        for a in soup.find_all("a"):
-            title = a.text.strip()
-            link = a.get("href")
+            r = requests.get(URL, timeout=15)
+            soup = BeautifulSoup(r.text, "html.parser")
 
-            if not title or not link:
-                continue
+            for a in soup.find_all("a"):
+                title = a.text.strip()
+                link = a.get("href")
 
-            # Sirf sarkari keywords
-            keywords = [
-                "Recruitment",
-                "Vacancy",
-                "Notification",
-                "Apply",
-                "Posts",
-                "Admit Card",
-                "Result"
-            ]
+                if not title or not link:
+                    continue
 
-            if any(k.lower() in title.lower() for k in keywords):
+                keywords = [
+                    "Recruitment",
+                    "Vacancy",
+                    "Notification",
+                    "Apply",
+                    "Posts",
+                    "Admit Card",
+                    "Result"
+                ]
 
-                if link.startswith("/"):
-                    link = "https://www.freejobalert.com" + link
+                if any(k.lower() in title.lower() for k in keywords):
 
-                jobs.append({
-                    "title": title,
-                    "link": link,
-                    "date": datetime.now().strftime("%d %b %Y")
-                })
+                    if link.startswith("/"):
+                        link = URL + link
 
-    except Exception as e:
-        print("Error:", e)
+                    jobs.append({
+                        "title": title,
+                        "link": link,
+                        "date": datetime.now().strftime("%d %b %Y")
+                    })
+
+        except Exception as e:
+            print("Error in", URL, ":", e)
 
     return jobs
 
