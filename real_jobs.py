@@ -1,34 +1,71 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import sqlite3
 
-URL = "https://www.freejobalert.com/"
+DB = "site.db"
+
+# Official sources list
+SOURCES = {
+    "SSC": "https://ssc.nic.in/",
+    "Railway": "https://indianrailways.gov.in/",
+    "UPSC": "https://upsc.gov.in/",
+    "Post Office": "https://www.indiapost.gov.in/",
+    # Add more official URLs here
+}
 
 def fetch_jobs():
-    r = requests.get(URL)
-    soup = BeautifulSoup(r.text, "html.parser")
-
     posts = []
+    for name, url in SOURCES.items():
+        try:
+            r = requests.get(url, timeout=10)
+            soup = BeautifulSoup(r.text, "html.parser")
+            links = soup.find_all("a")
 
-    for link in soup.find_all("a")[:20]:
-        title = link.text.strip()
-        href = link.get("href")
+            for link in links[:20]:  # top 20 links
+                title = link.text.strip()
+                href = link.get("href")
+                if not title or "2025" not in title:
+                    continue
 
-        if len(title) > 25 and "2025" in title:
-            posts.append({
-                "title": title,
-                "link": href,
-                "date": datetime.now().strftime("%d %b %Y")
-            })
-
+                # Only sarkari keywords
+                keywords = ["SSC", "Railway", "Police", "Army", "Teacher", "Post", "Anganwadi", "Recruitment", "Notification", "Form"]
+                if any(k.lower() in title.lower() for k in keywords):
+                    posts.append({
+                        "title": title,
+                        "link": href,
+                        "date": datetime.now().strftime("%d %b %Y")
+                    })
+        except Exception as e:
+            print(f"Error fetching {name}: {e}")
     return posts
+
+def save_to_db(posts):
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    
+    # Table create
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS posts(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT UNIQUE,
+        link TEXT,
+        date TEXT
+    )
+    """)
+    
+    for job in posts:
+        try:
+            cur.execute(
+                "INSERT INTO posts(title, link, date) VALUES (?,?,?)",
+                (job["title"], job["link"], job["date"])
+            )
+            print(f"Added: {job['title']}")
+        except sqlite3.IntegrityError:
+            print(f"Duplicate skipped: {job['title']}")
+    conn.commit()
+    conn.close()
 
 if __name__ == "__main__":
     jobs = fetch_jobs()
-
-    print("\n====== REAL GOVT JOB POSTS ======\n")
-    for job in jobs:
-        print("TITLE:", job["title"])
-        print("LINK:", job["link"])
-        print("DATE:", job["date"])
-        print("-----------------------------")
+    save_to_db(jobs)
