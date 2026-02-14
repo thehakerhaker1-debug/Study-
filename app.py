@@ -19,6 +19,16 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VNHHFJC5FN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VNHHFJC5FN');
+</script>
+
 <title>Latest Govt Job Updates 2025 | SSC Railway Police</title>
 <meta name="description" content="Daily govt job updates SSC Railway Police Admit Card Result">
 <meta name="keywords" content="govt job 2025, SSC GD, Railway Bharti, Police Bharti">
@@ -76,6 +86,7 @@ footer a{color:#ddd;margin:0 10px;text-decoration:none}
 </body>
 </html>
 """
+
 
 # ===============================
 # HOME PAGE
